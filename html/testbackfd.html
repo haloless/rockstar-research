@@ -1,0 +1,272 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>testbackfd</title><meta name="generator" content="MATLAB 8.1"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-03-24"><meta name="DC.source" content="testbackfd.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">Problem Description</a></li><li><a href="#3">Governing Equation</a></li></ul></div><pre class="codeinput">clear;
+</pre><h2>Problem Description<a name="2"></a></h2><pre class="codeinput"><span class="comment">% Example 21.1 American put option</span>
+is_american = 1;
+<span class="comment">% is_american = 0;</span>
+
+S0 = 50;
+K = 50;
+r = 0.10;
+sig = 0.40;
+T = 0.4167;
+q = 0.0;
+</pre><h2>Governing Equation<a name="3"></a></h2><p>We solve the Black-Sholes with dividend:</p><p><img src="testbackfd_eq82591.png" alt="$$ \frac{\partial f}{\partial t} + (r-q) S \frac{\partial f}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 f}{\partial S^2} = rf $$"></p><pre class="codeinput">sig2 = sig^2;
+
+option_value = @(s) max(K - s, 0);
+
+Smin = 0;
+Smax = 100;
+dS = 5;
+<span class="comment">% dS = 0.1;</span>
+Ss = (Smin:dS:Smax)';
+
+nmonth = 5;
+dmonth = 0.5;
+<span class="comment">% dmonth = 0.1;</span>
+dt = dmonth * (1/12);
+Ts = (0:dmonth:nmonth)';
+
+N = length(Ts) - 1;
+M = length(Ss) - 1;
+
+fs = zeros(M+1, N+1);
+
+<span class="comment">% set boundary values</span>
+fs(:,N+1) = option_value(Ss);
+fs(1,:) = option_value(Smin);
+fs(M+1,:) = option_value(Smax);
+
+<span class="keyword">for</span> i = N:-1:1
+    <span class="comment">% mat = zeros(M-1, M-1);</span>
+    mat = [];
+    rhs = zeros(M-1, 1);
+    <span class="keyword">for</span> j = 2:M
+        jj = j - 1;
+        jj2 = jj^2;
+        aa = 0.5*(r-q)*jj*dt - 0.5*sig2*jj2*dt;
+        bb = 1 + sig2*jj2*dt + r*dt;
+        cc = -0.5*(r-q)*jj*dt - 0.5*sig2*jj2*dt;
+
+        rr = fs(j,i+1);
+        <span class="keyword">if</span> (jj-1 == 0)
+            rr = rr - aa * fs(j-1,i);
+        <span class="keyword">else</span>
+            <span class="comment">% mat(jj,jj-1) = aa;</span>
+            mat(end+1,:) = [jj,jj-1, aa];
+        <span class="keyword">end</span>
+        <span class="comment">% mat(jj,jj) = bb;</span>
+        mat(end+1,:) = [jj,jj, bb];
+        <span class="keyword">if</span> (jj+1 == M)
+            rr = rr - cc * fs(j+1,i);
+        <span class="keyword">else</span>
+            <span class="comment">% mat(jj,jj+1) = cc;</span>
+            mat(end+1,:) = [jj,jj+1, cc];
+        <span class="keyword">end</span>
+        rhs(jj) = rr;
+    <span class="keyword">end</span>
+    <span class="comment">% mat = sparse(mat);</span>
+    mat = sparse(mat(:,1), mat(:,2), mat(:,3), M-1,M-1);
+
+
+    sol = mat \ rhs;
+    fs(2:M,i) = sol;
+
+    <span class="comment">% the following limiter is to ensure optimal early exercise</span>
+    <span class="comment">% consider K=50, S=40, f=9.8 &lt; K-S = 10, then the option should be exercised</span>
+    <span class="comment">% thus its current value should be K-S=10, not f=9.8</span>
+    <span class="comment">% in other words, the solved value should limited with max(K-S, f)</span>
+    <span class="keyword">if</span> (is_american)
+        fs(:,i) = max(K-Ss, fs(:,i));
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">% round to 0.01 precision</span>
+fs = round(fs./0.01) .* 0.01;
+
+disp([<span class="string">'S0='</span>, num2str(S0), <span class="string">' value='</span>, num2str(fs(find(Ss==S0),1))]);
+
+<span class="comment">% fs = flipud(fs);</span>
+
+figure;
+mesh(Ts,Ss, fs);
+xlabel(<span class="string">'time'</span>);
+ylabel(<span class="string">'stock price'</span>);
+zlabel(<span class="string">'option value'</span>);
+</pre><pre class="codeoutput">S0=50 value=4.07
+</pre><img vspace="5" hspace="5" src="testbackfd_01.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2013a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+
+clear;
+
+%% Problem Description
+
+
+% Example 21.1 American put option
+is_american = 1;
+% is_american = 0;
+
+S0 = 50;
+K = 50;
+r = 0.10;
+sig = 0.40;
+T = 0.4167;
+q = 0.0;
+
+%% Governing Equation
+% We solve the Black-Sholes with dividend:
+% 
+% $$ \frac{\partial f}{\partial t} + (r-q) S \frac{\partial f}{\partial S} + \frac{1}{2} \sigma^2 S^2 \frac{\partial^2 f}{\partial S^2} = rf $$
+% 
+
+
+sig2 = sig^2;
+
+option_value = @(s) max(K - s, 0);
+
+Smin = 0;
+Smax = 100;
+dS = 5;
+% dS = 0.1;
+Ss = (Smin:dS:Smax)';
+
+nmonth = 5;
+dmonth = 0.5;
+% dmonth = 0.1;
+dt = dmonth * (1/12);
+Ts = (0:dmonth:nmonth)';
+
+N = length(Ts) - 1;
+M = length(Ss) - 1;
+
+fs = zeros(M+1, N+1);
+
+% set boundary values
+fs(:,N+1) = option_value(Ss);
+fs(1,:) = option_value(Smin);
+fs(M+1,:) = option_value(Smax);
+
+for i = N:-1:1
+    % mat = zeros(M-1, M-1);
+    mat = [];
+    rhs = zeros(M-1, 1);
+    for j = 2:M
+        jj = j - 1;
+        jj2 = jj^2;
+        aa = 0.5*(r-q)*jj*dt - 0.5*sig2*jj2*dt;
+        bb = 1 + sig2*jj2*dt + r*dt;
+        cc = -0.5*(r-q)*jj*dt - 0.5*sig2*jj2*dt;
+        
+        rr = fs(j,i+1);
+        if (jj-1 == 0)
+            rr = rr - aa * fs(j-1,i);
+        else
+            % mat(jj,jj-1) = aa;
+            mat(end+1,:) = [jj,jj-1, aa];
+        end
+        % mat(jj,jj) = bb;
+        mat(end+1,:) = [jj,jj, bb];
+        if (jj+1 == M)
+            rr = rr - cc * fs(j+1,i);
+        else
+            % mat(jj,jj+1) = cc;
+            mat(end+1,:) = [jj,jj+1, cc];
+        end
+        rhs(jj) = rr;
+    end
+    % mat = sparse(mat);
+    mat = sparse(mat(:,1), mat(:,2), mat(:,3), M-1,M-1);
+    
+    
+    sol = mat \ rhs;
+    fs(2:M,i) = sol;
+    
+    % the following limiter is to ensure optimal early exercise
+    % consider K=50, S=40, f=9.8 < K-S = 10, then the option should be exercised
+    % thus its current value should be K-S=10, not f=9.8
+    % in other words, the solved value should limited with max(K-S, f)
+    if (is_american)
+        fs(:,i) = max(K-Ss, fs(:,i));
+    end
+end
+
+% round to 0.01 precision
+fs = round(fs./0.01) .* 0.01;
+
+disp(['S0=', num2str(S0), ' value=', num2str(fs(find(Ss==S0),1))]);
+
+% fs = flipud(fs);
+
+figure;
+mesh(Ts,Ss, fs);
+xlabel('time');
+ylabel('stock price');
+zlabel('option value');
+
+##### SOURCE END #####
+--></body></html>
